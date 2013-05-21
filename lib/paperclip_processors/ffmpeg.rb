@@ -31,6 +31,7 @@ module Paperclip
       @whiny           = options[:whiny].nil? ? true : options[:whiny]
       @format          = options[:format]
       @time            = options[:time].nil? ? 3 : options[:time]
+      @rotate          = options[:rotate]
       @current_format  = File.extname(@file.path)
       @basename        = File.basename(@file.path, @current_format)
       @meta            = identify
@@ -137,6 +138,19 @@ module Paperclip
         @convert_options[:output][:acodec] = 'libvorbis'
         @convert_options[:output][:vcodec] = 'libtheora'
         @convert_options[:output][:f] = 'ogg'
+      end
+
+      Ffmpeg.log("Adding Rotation") if @whiny
+      if @rotate && @meta[:rotate]
+        case @meta[:rotate]
+        when 90 # Clockwise
+          @convert_options[:output][:vf] = 'transpose=1'
+        when 180 # Clockwise
+          @convert_options[:output][:vf] = 'vflip,hflip'
+        when 270 # CounterClockwise
+          @convert_options[:output][:vf] = 'transpose=2'
+        end
+        @convert_options[:output][:'metadata:s:v'] = 'rotate=0'
       end
 
       Ffmpeg.log("Adding Source") if @whiny
