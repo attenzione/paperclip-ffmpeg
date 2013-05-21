@@ -126,7 +126,7 @@ module Paperclip
       # Add format
       case @format
       when 'jpg', 'jpeg', 'png', 'gif' # Images
-        @convert_options[:input][:ss] = @time
+        @convert_options[:input][:ss] = @time < 1 ? @meta[:duration] * @time : @time
         @convert_options[:output][:vframes] = 1
         @convert_options[:output][:f] = 'image2'
       when 'webm' # WebM
