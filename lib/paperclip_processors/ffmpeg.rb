@@ -176,6 +176,8 @@ module Paperclip
           size = v[2].strip!.split(' ').first
           meta[:size] = size.to_s
           meta[:aspect] = size.split('x').first.to_f / size.split('x').last.to_f
+          meta[:width] = size.split('x').first.to_i
+          meta[:height] = size.split('x').last.to_i
         end
         # Matching Duration: 00:01:31.66, start: 0.000000, bitrate: 10404 kb/s
         if line =~ /Duration:(\s.?(\d*):(\d*):(\d*\.\d*))/
