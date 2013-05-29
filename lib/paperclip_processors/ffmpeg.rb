@@ -29,7 +29,7 @@ module Paperclip
       @enlarge_only    = @keep_aspect    && @geometry[-1,1] == '<'
       @shrink_only     = @keep_aspect    && @geometry[-1,1] == '>'
       @whiny           = options[:whiny].nil? ? true : options[:whiny]
-      @format          = options[:format]
+      @format          = options[:format].to_s
       @time            = options[:time].nil? ? 3 : options[:time]
       @rotate          = options[:rotate]
       @current_format  = File.extname(@file.path)
