@@ -151,13 +151,15 @@ module Paperclip
 
       Ffmpeg.log("Adding Rotation") if @whiny
       if @rotate && @meta[:rotate]
+        @convert_options[:output][:vf][/\A/] = ',' if [90, 180, 270].include?(@meta[:rotate]) && @convert_options[:output][:vf]
+        @convert_options[:output][:vf] ||= ''
         case @meta[:rotate]
         when 90 # Clockwise
-          @convert_options[:output][:vf] = 'transpose=1'
+          @convert_options[:output][:vf][/\A/] = 'transpose=1'
         when 180 # Clockwise
-          @convert_options[:output][:vf] = 'vflip,hflip'
+          @convert_options[:output][:vf][/\A/] = 'vflip,hflip'
         when 270 # CounterClockwise
-          @convert_options[:output][:vf] = 'transpose=2'
+          @convert_options[:output][:vf][/\A/] = 'transpose=2'
         end
         @convert_options[:output][:'metadata:s:v'] = 'rotate=0'
       end
