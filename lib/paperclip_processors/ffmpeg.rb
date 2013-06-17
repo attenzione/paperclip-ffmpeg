@@ -25,7 +25,8 @@ module Paperclip
       @geometry        = options[:geometry]
       @file            = file
       @keep_aspect     = !@geometry.nil? && @geometry[-1,1] != '!'
-      @pad_only        = @keep_aspect    && @geometry[-1,1] == '#'
+      @crop_only       = @keep_aspect    && @geometry[-1,1] == '#'
+      @pad_only        = false # @keep_aspect    && @geometry[-1,1] == '#'
       @enlarge_only    = @keep_aspect    && @geometry[-1,1] == '<'
       @shrink_only     = @keep_aspect    && @geometry[-1,1] == '>'
       @whiny           = options[:whiny].nil? ? true : options[:whiny]
@@ -90,6 +91,14 @@ module Paperclip
                 Ffmpeg.log("Source is Smaller than Destination, Doing Nothing") if @whiny
                 #return nil
               end
+            elsif @crop_only
+              Ffmpeg.log("Crop Only") if @whiny
+              # There could be options already set
+              @convert_options[:output][:vf][/\A/] = ',' if @convert_options[:output][:vf]
+              @convert_options[:output][:vf] ||= ''
+              scale = @meta[:aspect].to_f > target_width.to_i / target_height.to_i ? "-1:#{target_height.to_i}" : "#{target_width.to_i}:-1"
+              @convert_options[:output][:vf][/\A/] = "scale=#{scale},crop=#{target_width.to_i}:#{target_height.to_i}"
+              Ffmpeg.log("Convert Options: #{@convert_options[:output][:s]}") if @whiny
             elsif @pad_only
               Ffmpeg.log("Pad Only") if @whiny
               # Keep aspect ratio
