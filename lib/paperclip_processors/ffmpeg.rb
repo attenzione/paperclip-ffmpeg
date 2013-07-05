@@ -60,6 +60,28 @@ module Paperclip
           target_width = $1
           target_height = $2
         end
+
+        # invert_aspect = false
+        if @rotate && @meta[:rotate]
+          Ffmpeg.log("Adding Rotation") if @whiny
+          @convert_options[:output][:vf][/\A/] = ',' if [90, 180, 270].include?(@meta[:rotate]) && @convert_options[:output][:vf]
+          @convert_options[:output][:vf] ||= ''
+          case @meta[:rotate]
+          when 90 # Clockwise
+            @convert_options[:output][:vf][/\A/] = 'transpose=1'
+            # invert_aspect = true
+          when 180 # Clockwise
+            @convert_options[:output][:vf][/\A/] = 'vflip,hflip'
+          when 270 # CounterClockwise
+            @convert_options[:output][:vf][/\A/] = 'transpose=2'
+            # invert_aspect = true
+          end
+          @convert_options[:output][:'metadata:s:v'] = 'rotate=0'
+          Ffmpeg.log("Convert Options: #{@convert_options[:output][:vf]}") if @whiny
+          # TODO: att: because of rotation to 90 or -90, need to invert all video meta: aspect, width, height
+          # TODO: att: also instance_write :meta need to move to the end of calculations
+        end
+
         # Only calculate target dimensions if we have current dimensions
         unless @meta[:size].nil?
           Ffmpeg.log("Target Size is Available") if @whiny
@@ -98,7 +120,7 @@ module Paperclip
               @convert_options[:output][:vf] ||= ''
               scale = @meta[:aspect].to_f > target_width.to_i / target_height.to_i ? "-1:#{target_height.to_i}" : "#{target_width.to_i}:-1"
               @convert_options[:output][:vf][/\A/] = "scale=#{scale},crop=#{target_width.to_i}:#{target_height.to_i}"
-              Ffmpeg.log("Convert Options: #{@convert_options[:output][:s]}") if @whiny
+              Ffmpeg.log("Convert Options: #{@convert_options[:output][:vf]}") if @whiny
             elsif @pad_only
               Ffmpeg.log("Pad Only") if @whiny
               # Keep aspect ratio
@@ -114,7 +136,7 @@ module Paperclip
               else
                 @convert_options[:output][:vf][/\A/] = "scale=#{width}:-1,crop=#{width.to_i}:#{height.to_i}"
               end
-              Ffmpeg.log("Convert Options: #{@convert_options[:output][:s]}") if @whiny
+              Ffmpeg.log("Convert Options: #{@convert_options[:output][:vf]}") if @whiny
             else
               Ffmpeg.log("Resize") if @whiny
               # Keep aspect ratio
@@ -147,21 +169,6 @@ module Paperclip
         @convert_options[:output][:acodec] = 'libvorbis'
         @convert_options[:output][:vcodec] = 'libtheora'
         @convert_options[:output][:f] = 'ogg'
-      end
-
-      Ffmpeg.log("Adding Rotation") if @whiny
-      if @rotate && @meta[:rotate]
-        @convert_options[:output][:vf][/\A/] = ',' if [90, 180, 270].include?(@meta[:rotate]) && @convert_options[:output][:vf]
-        @convert_options[:output][:vf] ||= ''
-        case @meta[:rotate]
-        when 90 # Clockwise
-          @convert_options[:output][:vf][/\A/] = 'transpose=1'
-        when 180 # Clockwise
-          @convert_options[:output][:vf][/\A/] = 'vflip,hflip'
-        when 270 # CounterClockwise
-          @convert_options[:output][:vf][/\A/] = 'transpose=2'
-        end
-        @convert_options[:output][:'metadata:s:v'] = 'rotate=0'
       end
 
       Ffmpeg.log("Adding Source") if @whiny
