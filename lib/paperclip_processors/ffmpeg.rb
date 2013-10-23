@@ -169,6 +169,9 @@ module Paperclip
         @convert_options[:output][:acodec] = 'libvorbis'
         @convert_options[:output][:vcodec] = 'libtheora'
         @convert_options[:output][:f] = 'ogg'
+      when 'mp4'
+        @convert_options[:output][:acodec] = 'aac'
+        @convert_options[:output][:strict] = 'experimental'
       end
 
       Ffmpeg.log("Adding Source") if @whiny
@@ -198,15 +201,15 @@ module Paperclip
       Paperclip.log("[ffmpeg] #{command}")
       ffmpeg = IO.popen(command)
       ffmpeg.each("\r") do |line|
-        if line =~ /((\d*)\s.?)fps,/
+        if line =~ /(([\d\.]*)\s.?)fps,/
           meta[:fps] = $1.to_i
         end
         # Matching lines like:
         # Video: h264, yuvj420p, 640x480 [PAR 72:72 DAR 4:3], 10301 kb/s, 30 fps, 30 tbr, 600 tbn, 600 tbc
         if line =~ /Video:(.*)/
-          v = $1.to_s.split(',')
-          size = v[2].strip!.split(' ').first
-          meta[:size] = size.to_s
+          v = $1.to_s
+          size = v.match(/\d{3,5}x\d{3,5}/).to_s
+          meta[:size] = size
           meta[:aspect] = size.split('x').first.to_f / size.split('x').last.to_f
           meta[:width] = size.split('x').first.to_i
           meta[:height] = size.split('x').last.to_i
