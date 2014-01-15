@@ -223,6 +223,7 @@ module Paperclip
           meta[:rotate] = $1.to_i
         end
       end
+      Paperclip.log("[ffmpeg] Meta Read: #{meta.to_s}") if @whiny
       Paperclip.log("[ffmpeg] Command Success") if @whiny
       meta
     end
